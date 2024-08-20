@@ -5,6 +5,17 @@ ConRO.Paladin.CheckPvPTalents = function()
 end
 local ConRO_Paladin, ids = ...;
 
+local GetSpellInfo = function(spellID)
+	if not spellID then
+		return nil;
+	end
+
+	local spellInfo = C_Spell.GetSpellInfo(spellID);
+	if spellInfo then
+		return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime, spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID, spellInfo.originalIconID;
+	end
+end
+
 function ConRO:EnableRotationModule(mode)
 	mode = mode or 0;
 	self.ModuleOnEnable = ConRO.Paladin.CheckTalents;
@@ -100,69 +111,72 @@ function ConRO.Paladin.Disabled(_, timeShift, currentSpell, gcd, tChosen, pvpCho
 	return nil;
 end
 
-function ConRO.Paladin.Under10(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
 --Info
-	local _Player_Level																														= UnitLevel("player");
-	local _Player_Percent_Health 																									= ConRO:PercentHealth('player');
-	local _is_PvP																																	= ConRO:IsPvP();
-	local _in_combat 																															= UnitAffectingCombat('player');
-	local _party_size																															= GetNumGroupMembers();
-
-	local _is_PC																																	= UnitPlayerControlled("target");
-	local _is_Enemy 																															= ConRO:TarHostile();
-	local _Target_Health 																													= UnitHealth('target');
-	local _Target_Percent_Health 																									= ConRO:PercentHealth('target');
+local _Player_Level = UnitLevel("player");
+local _Player_Percent_Health = ConRO:PercentHealth('player');
+local _is_PvP = ConRO:IsPvP();
+local _in_combat = UnitAffectingCombat('player');
+local _party_size = GetNumGroupMembers();
+local _is_PC = UnitPlayerControlled("target");
+local _is_Enemy = ConRO:TarHostile();
+local _Target_Health = UnitHealth('target');
+local _Target_Percent_Health = ConRO:PercentHealth('target');
 
 --Resources
-
---Racials
-	local _AncestralCall, _AncestralCall_RDY																			= ConRO:AbilityReady(ids.Racial.AncestralCall, timeShift);
-	local _ArcanePulse, _ArcanePulse_RDY																					= ConRO:AbilityReady(ids.Racial.ArcanePulse, timeShift);
-	local _Berserking, _Berserking_RDY																						= ConRO:AbilityReady(ids.Racial.Berserking, timeShift);
-	local _ArcaneTorrent, _ArcaneTorrent_RDY																			= ConRO:AbilityReady(ids.Racial.ArcaneTorrent, timeShift);
-
---Abilities
+local _Mana, _Mana_Max, _Mana_Percent = ConRO:PlayerPower('Mana');
+local _HolyPower, _HolyPower_Max = ConRO:PlayerPower('HolyPower');
 
 --Conditions
-	local _is_moving 																															= ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee																			= ConRO:Targets("Melee");
-	local _target_in_10yrds 																											= ConRO:CheckInteractDistance("target", 3);
+local _is_moving = ConRO:PlayerSpeed();
+local _enemies_in_melee, _target_in_melee = ConRO:Targets("Melee");
+local _enemies_in_10yrds, _target_in_10yrds = ConRO:Targets("10");
+local _enemies_in_25yrds, _target_in_25yrds = ConRO:Targets("25");
+local _enemies_in_40yrds, _target_in_40yrds = ConRO:Targets("40");
+local _can_Execute = _Target_Percent_Health < 20;
+
+--Racials
+local _ArcaneTorrent, _ArcaneTorrent_RDY = _, _;
+
+function ConRO:Stats()
+	_Player_Level = UnitLevel("player");
+	_Player_Percent_Health = ConRO:PercentHealth('player');
+	_is_PvP = ConRO:IsPvP();
+	_in_combat = UnitAffectingCombat('player');
+	_party_size = GetNumGroupMembers();
+	_is_PC = UnitPlayerControlled("target");
+	_is_Enemy = ConRO:TarHostile();
+	_Target_Health = UnitHealth('target');
+	_Target_Percent_Health = ConRO:PercentHealth('target');
+
+	_Mana, _Mana_Max, _Mana_Percent = ConRO:PlayerPower('Mana');
+	_HolyPower, _HolyPower_Max = ConRO:PlayerPower('HolyPower');
+
+	_is_moving = ConRO:PlayerSpeed();
+	_enemies_in_melee, _target_in_melee = ConRO:Targets("Melee");
+	_enemies_in_10yrds, _target_in_10yrds = ConRO:Targets("10");
+	_enemies_in_25yrds, _target_in_25yrds = ConRO:Targets("25");
+	_enemies_in_40yrds, _target_in_40yrds = ConRO:Targets("40");
+	_can_Execute = _Target_Percent_Health < 20;
+
+	_ArcaneTorrent, _ArcaneTorrent_RDY = ConRO:AbilityReady(ids.Racial.ArcaneTorrent, timeShift);
+end
+
+function ConRO.Paladin.Under10(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
+	wipe(ConRO.SuggestedSpells);
+	ConRO:Stats();
+--Abilities
 
 --Warnings
 
 --Rotations
 
-
 	return nil;
 end
 
 function ConRO.Paladin.Under10Def(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
---Info
-	local _Player_Level																														= UnitLevel("player");
-	local _Player_Percent_Health 																									= ConRO:PercentHealth('player');
-	local _is_PvP																																	= ConRO:IsPvP();
-	local _in_combat 																															= UnitAffectingCombat('player');
-	local _party_size																															= GetNumGroupMembers();
-
-	local _is_PC																																	= UnitPlayerControlled("target");
-	local _is_Enemy 																															= ConRO:TarHostile();
-	local _Target_Health 																													= UnitHealth('target');
-	local _Target_Percent_Health 																									= ConRO:PercentHealth('target');
-
---Resources
-
---Racials
-	local _AncestralCall, _AncestralCall_RDY																			= ConRO:AbilityReady(ids.Racial.AncestralCall, timeShift);
-	local _ArcanePulse, _ArcanePulse_RDY																					= ConRO:AbilityReady(ids.Racial.ArcanePulse, timeShift);
-	local _Berserking, _Berserking_RDY																						= ConRO:AbilityReady(ids.Racial.Berserking, timeShift);
-	local _ArcaneTorrent, _ArcaneTorrent_RDY																			= ConRO:AbilityReady(ids.Racial.ArcaneTorrent, timeShift);
-
+	wipe(ConRO.SuggestedDefSpells);
+	ConRO:Stats();
 --Abilities
-
---Conditions
-	local _is_moving 																															= ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee																			= ConRO:Targets("Melee");
-	local _target_in_10yrds 																											= ConRO:CheckInteractDistance("target", 3);
 
 --Warnings
 
@@ -172,73 +186,48 @@ function ConRO.Paladin.Under10Def(_, timeShift, currentSpell, gcd, tChosen, pvpC
 end
 
 function ConRO.Paladin.Holy(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
-	wipe(ConRO.SuggestedSpells)
-	local Racial, Ability, Form, Buff, Debuff, PetAbility, PvPTalent, Glyph = ids.Racial, ids.Holy_Ability, ids.Holy_Form, ids.Holy_Buff, ids.Holy_Debuff, ids.Holy_PetAbility, ids.Holy_PvPTalent, ids.Glyph;
---Info
-	local _Player_Level																														= UnitLevel("player");
-	local _Player_Percent_Health 																									= ConRO:PercentHealth('player');
-	local _is_PvP																																	= ConRO:IsPvP();
-	local _in_combat 																															= UnitAffectingCombat('player');
-	local _party_size																															= GetNumGroupMembers();
-
-	local _is_PC																																	= UnitPlayerControlled("target");
-	local _is_Enemy 																															= ConRO:TarHostile();
-	local _Target_Health 																													= UnitHealth('target');
-	local _Target_Percent_Health 																									= ConRO:PercentHealth('target');
-
---Resources
-	local _Mana, _Mana_Max, _Mana_Percent																					= ConRO:PlayerPower('Mana');
-	local _HolyPower, _HolyPower_Max																							= ConRO:PlayerPower('HolyPower');
-
---Racials
-	local _ArcaneTorrent, _ArcaneTorrent_RDY																			= ConRO:AbilityReady(Racial.ArcaneTorrent, timeShift);
+	wipe(ConRO.SuggestedSpells);
+	ConRO:Stats();
+	local Ability, Form, Buff, Debuff, PetAbility, PvPTalent = ids.Holy_Ability, ids.Holy_Form, ids.Holy_Buff, ids.Holy_Debuff, ids.Holy_PetAbility, ids.Holy_PvPTalent;
 
 --Abilities
 	--Paladin
-	local _AvengingWrath, _AvengingWrath_RDY 																			= ConRO:AbilityReady(Ability.AvengingWrath, timeShift);
-	local _BlessingofFreedom, _BlessingofFreedom_RDY	 														= ConRO:AbilityReady(Ability.BlessingofFreedom, timeShift);
-	local _BlindingLight, _BlindingLight_RDY	 																		= ConRO:AbilityReady(Ability.BlindingLight, timeShift);
-	local _Consecration, _Consecration_RDY 																				= ConRO:AbilityReady(Ability.Consecration, timeShift);
-	local _CrusaderStrike, _CrusaderStrike_RDY				 														= ConRO:AbilityReady(Ability.CrusaderStrike, timeShift);
-		local _CrusaderStrike_CHARGES																									= ConRO:SpellCharges(Ability.CrusaderStrike.spellID);
-	local _DivineSteed, _DivineSteed_RDY	 																				= ConRO:AbilityReady(Ability.DivineSteed, timeShift);
-	local _HammerofJustice, _HammerofJustice_RDY 																	= ConRO:AbilityReady(Ability.HammerofJustice, timeShift);
-	local _HammerofWrath, _HammerofWrath_RDY 																			= ConRO:AbilityReady(Ability.HammerofWrath, timeShift);
-	local _HolyAvenger, _HolyAvenger_RDY	 																				= ConRO:AbilityReady(Ability.HolyAvenger, timeShift);
-	local _Judgment, _Judgment_RDY	 																							= ConRO:AbilityReady(Ability.Judgment, timeShift);
-	local _Rebuke, _Rebuke_RDY	 																									= ConRO:AbilityReady(Ability.Rebuke, timeShift);
-	local _Repentance, _Repentance_RDY	 																					= ConRO:AbilityReady(Ability.Repentance, timeShift);
-	local _Seraphim, _Seraphim_RDY	 																							= ConRO:AbilityReady(Ability.Seraphim, timeShift);
-	local _ShieldoftheRighteous, _ShieldoftheRighteous_RDY	 											= ConRO:AbilityReady(Ability.ShieldoftheRighteous, timeShift);
-	local _TurnEvil, _TurnEvil_RDY	 																							= ConRO:AbilityReady(Ability.TurnEvil, timeShift);
-	local _WordofGlory, _WordofGlory_RDY	 																				= ConRO:AbilityReady(Ability.WordofGlory, timeShift);
-		local _DivinePurpose_BUFF																											= ConRO:Aura(Buff.DivinePurpose);
-  --Holy
-	local _AuraMastery, _AuraMastery_RDY 																					= ConRO:AbilityReady(Ability.AuraMastery, timeShift);
-	local _AvengingCrusader, _AvengingCrusader_RDY 																= ConRO:AbilityReady(Ability.AvengingCrusader, timeShift);
-	local _BeaconofFaith, _BeaconofFaith_RDY 																			= ConRO:AbilityReady(Ability.BeaconofFaith, timeShift);
-	local _BeaconofLight, _BeaconofLight_RDY 																			= ConRO:AbilityReady(Ability.BeaconofLight, timeShift);
-	local _BlessingofAutumn, _BlessingofAutumn_RDY 																= ConRO:AbilityReady(Ability.BlessingofAutumn, timeShift);
-	local _BlessingofSpring, _BlessingofSpring_RDY 																= ConRO:AbilityReady(Ability.BlessingofSpring, timeShift);
-	local _BlessingofSummer, _BlessingofSummer_RDY 																= ConRO:AbilityReady(Ability.BlessingofSummer, timeShift);
-	local _BlessingofWinter, _BlessingofWinter_RDY 																= ConRO:AbilityReady(Ability.BlessingofWinter, timeShift);
-	local _DivineToll, _DivineToll_RDY 																						= ConRO:AbilityReady(Ability.DivineToll, timeShift);
-	local _HolyPrism, _HolyPrism_RDY 																							= ConRO:AbilityReady(Ability.HolyPrism, timeShift);
-	local _HolyShock, _HolyShock_RDY 																							= ConRO:AbilityReady(Ability.HolyShock, timeShift);
-	local _LightofDawn, _LightofDawn_RDY	 																				= ConRO:AbilityReady(Ability.LightofDawn, timeShift);
-	local _LightsHammer, _LightsHammer_RDY																				= ConRO:AbilityReady(Ability.LightsHammer, timeShift);
+	local _AvengingWrath, _AvengingWrath_RDY = ConRO:AbilityReady(Ability.AvengingWrath, timeShift);
+	local _BlessingofFreedom, _BlessingofFreedom_RDY = ConRO:AbilityReady(Ability.BlessingofFreedom, timeShift);
+	local _BlindingLight, _BlindingLight_RDY = ConRO:AbilityReady(Ability.BlindingLight, timeShift);
+	local _Consecration, _Consecration_RDY = ConRO:AbilityReady(Ability.Consecration, timeShift);
+	local _CrusaderStrike, _CrusaderStrike_RDY = ConRO:AbilityReady(Ability.CrusaderStrike, timeShift);
+		local _CrusaderStrike_CHARGES = ConRO:SpellCharges(Ability.CrusaderStrike.spellID);
+	local _DivineSteed, _DivineSteed_RDY = ConRO:AbilityReady(Ability.DivineSteed, timeShift);
+	local _HammerofJustice, _HammerofJustice_RDY = ConRO:AbilityReady(Ability.HammerofJustice, timeShift);
+	local _HammerofWrath, _HammerofWrath_RDY = ConRO:AbilityReady(Ability.HammerofWrath, timeShift);
+	local _Judgment, _Judgment_RDY = ConRO:AbilityReady(Ability.Judgment, timeShift);
+	local _Rebuke, _Rebuke_RDY = ConRO:AbilityReady(Ability.Rebuke, timeShift);
+	local _Repentance, _Repentance_RDY = ConRO:AbilityReady(Ability.Repentance, timeShift);
+	local _ShieldoftheRighteous, _ShieldoftheRighteous_RDY = ConRO:AbilityReady(Ability.ShieldoftheRighteous, timeShift);
+	local _TurnEvil, _TurnEvil_RDY = ConRO:AbilityReady(Ability.TurnEvil, timeShift);
+	local _WordofGlory, _WordofGlory_RDY = ConRO:AbilityReady(Ability.WordofGlory, timeShift);
+		local _DivinePurpose_BUFF = ConRO:Aura(Buff.DivinePurpose);
+ 	 --Holy
+	local _AuraMastery, _AuraMastery_RDY = ConRO:AbilityReady(Ability.AuraMastery, timeShift);
+	local _AvengingCrusader, _AvengingCrusader_RDY = ConRO:AbilityReady(Ability.AvengingCrusader, timeShift);
+	local _BeaconofFaith, _BeaconofFaith_RDY = ConRO:AbilityReady(Ability.BeaconofFaith, timeShift);
+	local _BeaconofLight, _BeaconofLight_RDY = ConRO:AbilityReady(Ability.BeaconofLight, timeShift);
+	local _BlessingofAutumn, _BlessingofAutumn_RDY = ConRO:AbilityReady(Ability.BlessingofAutumn, timeShift);
+	local _BlessingofSpring, _BlessingofSpring_RDY = ConRO:AbilityReady(Ability.BlessingofSpring, timeShift);
+	local _BlessingofSummer, _BlessingofSummer_RDY = ConRO:AbilityReady(Ability.BlessingofSummer, timeShift);
+	local _BlessingofWinter, _BlessingofWinter_RDY = ConRO:AbilityReady(Ability.BlessingofWinter, timeShift);
+	local _DivineToll, _DivineToll_RDY = ConRO:AbilityReady(Ability.DivineToll, timeShift);
+	local _HolyPrism, _HolyPrism_RDY = ConRO:AbilityReady(Ability.HolyPrism, timeShift);
+	local _HolyShock, _HolyShock_RDY = ConRO:AbilityReady(Ability.HolyShock, timeShift);
+	local _LightofDawn, _LightofDawn_RDY = ConRO:AbilityReady(Ability.LightofDawn, timeShift);
+	local _LightsHammer, _LightsHammer_RDY = ConRO:AbilityReady(Ability.LightsHammer, timeShift);
 
 		if tChosen[Ability.SanctifiedWrath.talentID] then
-			_AvengingWrath, _AvengingWrath_RDY																					= ConRO:AbilityReady(Ability.SanctifiedWrath, timeShift);
+			_AvengingWrath, _AvengingWrath_RDY = ConRO:AbilityReady(Ability.SanctifiedWrath, timeShift);
 		elseif tChosen[Ability.AvengingWrathMight.talentID] then
-			_AvengingWrath, _AvengingWrath_RDY																					= ConRO:AbilityReady(Ability.AvengingWrathMight, timeShift);
+			_AvengingWrath, _AvengingWrath_RDY = ConRO:AbilityReady(Ability.AvengingWrathMight, timeShift);
 		end
-
---Conditions
-	local _is_moving 																															= ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee																			= ConRO:Targets("Melee");
-	local _target_in_10yrds 																											= ConRO:CheckInteractDistance("target", 3);
-	local _can_execute																														= _Target_Percent_Health <= 20;
 
 		if _DivinePurpose_BUFF then
 			_HolyPower = 5;
@@ -320,35 +309,16 @@ function ConRO.Paladin.Holy(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
 end
 
 function ConRO.Paladin.HolyDef(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
-	wipe(ConRO.SuggestedDefSpells)
-	local Racial, Ability, Form, Buff, Debuff, PetAbility, PvPTalent, Glyph = ids.Racial, ids.Holy_Ability, ids.Holy_Form, ids.Holy_Buff, ids.Holy_Debuff, ids.Holy_PetAbility, ids.Holy_PvPTalent, ids.Glyph;
---Info
-	local _Player_Level																														= UnitLevel("player");
-	local _Player_Percent_Health 																									= ConRO:PercentHealth('player');
-	local _is_PvP																																	= ConRO:IsPvP();
-	local _in_combat 																															= UnitAffectingCombat('player');
-	local _party_size																															= GetNumGroupMembers();
-
-	local _is_PC																																	= UnitPlayerControlled("target");
-	local _is_Enemy 																															= ConRO:TarHostile();
-	local _Target_Health 																													= UnitHealth('target');
-	local _Target_Percent_Health 																									= ConRO:PercentHealth('target');
-
---Resources
-	local _Mana, _Mana_Max, _Mana_Percent																					= ConRO:PlayerPower('Mana');
-	local _HolyPower, _HolyPower_Max																							= ConRO:PlayerPower('HolyPower');
+	wipe(ConRO.SuggestedDefSpells);
+	ConRO:Stats();
+	local Ability, Form, Buff, Debuff, PetAbility, PvPTalent = ids.Holy_Ability, ids.Holy_Form, ids.Holy_Buff, ids.Holy_Debuff, ids.Holy_PetAbility, ids.Holy_PvPTalent;
 
 --Abilities
-	local _BlessingofProtection, _BlessingofProtection_RDY 												= ConRO:AbilityReady(ids.Holy_Ability.BlessingofProtection, timeShift);
-	local _DivineProtection, _DivineProtection_RDY 																= ConRO:AbilityReady(ids.Holy_Ability.DivineProtection, timeShift);
-	local _DivineShield, _DivineShield_RDY 																				= ConRO:AbilityReady(ids.Holy_Ability.DivineShield, timeShift);
-	local _LayonHands, _LayonHands_RDY 																						= ConRO:AbilityReady(ids.Holy_Ability.LayonHands, timeShift);
-		local _Forbearance_BUFF 																											= ConRO:Aura(ids.Holy_Debuff.Forbearance, timeShift, 'HARMFUL');
-
---Conditions
-	local _is_moving 																															= ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee																			= ConRO:Targets("Melee");
-	local _target_in_10yrds 																											= ConRO:CheckInteractDistance("target", 3);
+	local _BlessingofProtection, _BlessingofProtection_RDY = ConRO:AbilityReady(ids.Holy_Ability.BlessingofProtection, timeShift);
+	local _DivineProtection, _DivineProtection_RDY = ConRO:AbilityReady(ids.Holy_Ability.DivineProtection, timeShift);
+	local _DivineShield, _DivineShield_RDY = ConRO:AbilityReady(ids.Holy_Ability.DivineShield, timeShift);
+	local _LayonHands, _LayonHands_RDY = ConRO:AbilityReady(ids.Holy_Ability.LayonHands, timeShift);
+		local _Forbearance_BUFF = ConRO:Aura(ids.Holy_Debuff.Forbearance, timeShift, 'HARMFUL');
 
 --Rotations
 		if _LayonHands_RDY and not _Forbearance_BUFF and _Player_Percent_Health <= 10 then
@@ -368,26 +338,9 @@ function ConRO.Paladin.HolyDef(_, timeShift, currentSpell, gcd, tChosen, pvpChos
 end
 
 function ConRO.Paladin.Protection(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
-	wipe(ConRO.SuggestedSpells)
-	local Racial, Ability, Form, Buff, Debuff, PetAbility, PvPTalent, Glyph = ids.Racial, ids.Prot_Ability, ids.Prot_Form, ids.Prot_Buff, ids.Prot_Debuff, ids.Prot_PetAbility, ids.Prot_PvPTalent, ids.Glyph;
---Info
-	local _Player_Level	= UnitLevel("player");
-	local _Player_Percent_Health = ConRO:PercentHealth('player');
-	local _is_PvP = ConRO:IsPvP();
-	local _in_combat = UnitAffectingCombat('player');
-	local _party_size = GetNumGroupMembers();
-
-	local _is_PC = UnitPlayerControlled("target");
-	local _is_Enemy = ConRO:TarHostile();
-	local _Target_Health = UnitHealth('target');
-	local _Target_Percent_Health = ConRO:PercentHealth('target');
-
---Resources
-	local _Mana, _Mana_Max, _Mana_Percent = ConRO:PlayerPower('Mana');
-	local _HolyPower, _HolyPower_Max = ConRO:PlayerPower('HolyPower');
-
---Racials
-	local _ArcaneTorrent, _ArcaneTorrent_RDY = ConRO:AbilityReady(Racial.ArcaneTorrent, timeShift);
+	wipe(ConRO.SuggestedSpells);
+	ConRO:Stats();
+	local Ability, Form, Buff, Debuff, PetAbility, PvPTalent = ids.Prot_Ability, ids.Prot_Form, ids.Prot_Buff, ids.Prot_Debuff, ids.Prot_PetAbility, ids.Prot_PvPTalent;
 
 --Abilities
 	local _AvengersShield, _AvengersShield_RDY = ConRO:AbilityReady(Ability.AvengersShield, timeShift);
@@ -415,12 +368,6 @@ function ConRO.Paladin.Protection(_, timeShift, currentSpell, gcd, tChosen, pvpC
 		local _BastionofLight_BUFF, _, _BastionofLight_DUR = ConRO:Aura(Buff.BastionofLight, timeShift);
 		local _Redoubt_BUFF, _, _Redoubt_DUR = ConRO:Aura(Buff.Redoubt, timeShift);
 	local _WordofGlory, _WordofGlory_RDY = ConRO:AbilityReady(Ability.WordofGlory, timeShift);
-
---Conditions
-	local _is_moving = ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee = ConRO:Targets("Melee");
-	local _enemies_in_25yrds, _target_in_25yrds = ConRO:Targets("25");
-	local _can_execute = _Target_Percent_Health <= 20;
 
 		if _DivinePurpose_BUFF then
 			_HolyPower = 5;
@@ -530,23 +477,9 @@ function ConRO.Paladin.Protection(_, timeShift, currentSpell, gcd, tChosen, pvpC
 end
 
 function ConRO.Paladin.ProtectionDef(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
-	wipe(ConRO.SuggestedDefSpells)
-	local Racial, Ability, Form, Buff, Debuff, PetAbility, PvPTalent, Glyph = ids.Racial, ids.Prot_Ability, ids.Prot_Form, ids.Prot_Buff, ids.Prot_Debuff, ids.Prot_PetAbility, ids.Prot_PvPTalent, ids.Glyph;
---Info
-	local _Player_Level = UnitLevel("player");
-	local _Player_Percent_Health = ConRO:PercentHealth('player');
-	local _is_PvP = ConRO:IsPvP();
-	local _in_combat = UnitAffectingCombat('player');
-	local _party_size = GetNumGroupMembers();
-
-	local _is_PC = UnitPlayerControlled("target");
-	local _is_Enemy = ConRO:TarHostile();
-	local _Target_Health = UnitHealth('target');
-	local _Target_Percent_Health = ConRO:PercentHealth('target');
-
---Resources
-	local _Mana, _Mana_Max, _Mana_Percent = ConRO:PlayerPower('Mana');
-	local _HolyPower, _HolyPower_Max = ConRO:PlayerPower('HolyPower');
+	wipe(ConRO.SuggestedDefSpells);
+	ConRO:Stats();
+	local Ability, Form, Buff, Debuff, PetAbility, PvPTalent = ids.Prot_Ability, ids.Prot_Form, ids.Prot_Buff, ids.Prot_Debuff, ids.Prot_PetAbility, ids.Prot_PvPTalent;
 
 --Abilities
 	local _ArdentDefender, _ArdentDefender_RDY, _ArdentDefender_CD = ConRO:AbilityReady(Ability.ArdentDefender, timeShift);
@@ -563,11 +496,6 @@ function ConRO.Paladin.ProtectionDef(_, timeShift, currentSpell, gcd, tChosen, p
 	local _LayonHands, _LayonHands_RDY = ConRO:AbilityReady(Ability.LayonHands, timeShift);
 		local _Forbearance_BUFF = ConRO:Aura(Debuff.Forbearance, timeShift, 'HARMFUL');
 	local _WordofGlory, _WordofGlory_RDY = ConRO:AbilityReady(Ability.WordofGlory, timeShift);
-
---Conditions
-	local _is_moving = ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee = ConRO:Targets("Melee");
-	local _target_in_10yrds = ConRO:CheckInteractDistance("target", 3);
 
 --Rotations
 		if _LayonHands_RDY and not _Forbearance_BUFF and _Player_Percent_Health <= 10 then
@@ -601,26 +529,9 @@ function ConRO.Paladin.ProtectionDef(_, timeShift, currentSpell, gcd, tChosen, p
 end
 
 function ConRO.Paladin.Retribution(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
-	wipe(ConRO.SuggestedSpells)
-	local Racial, Ability, Form, Buff, Debuff, PetAbility, PvPTalent, Glyph = ids.Racial, ids.Ret_Ability, ids.Ret_Form, ids.Ret_Buff, ids.Ret_Debuff, ids.Ret_PetAbility, ids.Ret_PvPTalent, ids.Glyph;
---Info
-	local _Player_Level = UnitLevel("player");
-	local _Player_Percent_Health = ConRO:PercentHealth('player');
-	local _is_PvP = ConRO:IsPvP();
-	local _in_combat = UnitAffectingCombat('player');
-	local _party_size = GetNumGroupMembers();
-
-	local _is_PC = UnitPlayerControlled("target");
-	local _is_Enemy = ConRO:TarHostile();
-	local _Target_Health = UnitHealth('target');
-	local _Target_Percent_Health = ConRO:PercentHealth('target');
-
---Resources
-	local _Mana, _Mana_Max, _Mana_Percent = ConRO:PlayerPower('Mana');
-	local _HolyPower, _HolyPower_Max = ConRO:PlayerPower('HolyPower');
-
---Racials
-	local _ArcaneTorrent, _ArcaneTorrent_RDY = ConRO:AbilityReady(Racial.ArcaneTorrent, timeShift);
+	wipe(ConRO.SuggestedSpells);
+	ConRO:Stats();
+	local Ability, Form, Buff, Debuff, PetAbility, PvPTalent = ids.Ret_Ability, ids.Ret_Form, ids.Ret_Buff, ids.Ret_Debuff, ids.Ret_PetAbility, ids.Ret_PvPTalent;
 
 --Abilities
 	local _AvengingWrath, _AvengingWrath_RDY, _AvengingWrath_CD = ConRO:AbilityReady(Ability.AvengingWrath, timeShift);
@@ -651,16 +562,12 @@ function ConRO.Paladin.Retribution(_, timeShift, currentSpell, gcd, tChosen, pvp
 	local _Rebuke, _Rebuke_RDY = ConRO:AbilityReady(Ability.Rebuke, timeShift);
 	local _TemplarsVerdict, _TemplarsVerdict_RDY = ConRO:AbilityReady(Ability.TemplarsVerdict, timeShift);
 		local _FinalVerdict, _FinalVerdict_RDY, _FinalVerdict_CD = ConRO:AbilityReady(Ability.FinalVerdict, timeShift);
+			local _FinalVerdict_BUFF = ConRO:Aura(Buff.FinalVerdict, timeShift);
 		local _DivineArbiter_BUFF, _DivineArbiter_COUNT = ConRO:Aura(Buff.DivineArbiter, timeShift);
 	local _WakeofAshes, _WakeofAshes_RDY = ConRO:AbilityReady(Ability.WakeofAshes, timeShift);
 	local _WordofGlory, _WordofGlory_RDY = ConRO:AbilityReady(Ability.WordofGlory, timeShift);
 
---Conditions
-	local _is_moving = ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee = ConRO:Targets("Melee");
-	local _enemies_in_10yrds, _target_in_10yrds = ConRO:Targets("10");
 	local _enemies_in_30yrds, _target_in_30yrds = ConRO:Targets(Ability.Judgment);
-	local _can_execute = _Target_Percent_Health <= 20;
 
 	if _DivinePurpose_BUFF then
 		_HolyPower = 5;
@@ -744,7 +651,7 @@ function ConRO.Paladin.Retribution(_, timeShift, currentSpell, gcd, tChosen, pvp
 				_HolyPower = _HolyPower + _enemies_in_30yrds;
 			end
 
-			if _HammerofWrath_RDY and (_can_execute or _Crusade_BUFF or _AvengingWrath_BUFF) and ((ConRO_AutoButton:IsVisible() and (_enemies_in_melee <= 1)) or ConRO_SingleButton:IsVisible()) then
+			if _HammerofWrath_RDY and (_can_execute or _Crusade_BUFF or _AvengingWrath_BUFF or _FinalVerdict_BUFF) and ((ConRO_AutoButton:IsVisible() and (_enemies_in_melee <= 1)) or ConRO_SingleButton:IsVisible()) then
 				tinsert(ConRO.SuggestedSpells, _HammerofWrath);
 				_HammerofWrath_RDY = false;
 				_HolyPower = _HolyPower + 1;
@@ -791,13 +698,7 @@ function ConRO.Paladin.Retribution(_, timeShift, currentSpell, gcd, tChosen, pvp
 			end
 		end
 
-		if _TemplarSlash_RDY then
-			tinsert(ConRO.SuggestedSpells, _TemplarStrike);
-			_TemplarSlash_RDY = false;
-			_HolyPower = _HolyPower + 1;
-		end
-
-		if _TemplarStrike_RDY then
+		if _TemplarStrike_RDY or _TemplarSlash_RDY then
 			tinsert(ConRO.SuggestedSpells, _TemplarStrike);
 			_TemplarStrike_RDY = false;
 			_HolyPower = _HolyPower + 1;
@@ -825,23 +726,9 @@ function ConRO.Paladin.Retribution(_, timeShift, currentSpell, gcd, tChosen, pvp
 end
 
 function ConRO.Paladin.RetributionDef(_, timeShift, currentSpell, gcd, tChosen, pvpChosen)
-	wipe(ConRO.SuggestedDefSpells)
-	local Racial, Ability, Form, Buff, Debuff, PetAbility, PvPTalent, Glyph = ids.Racial, ids.Ret_Ability, ids.Ret_Form, ids.Ret_Buff, ids.Ret_Debuff, ids.Ret_PetAbility, ids.Ret_PvPTalent, ids.Glyph;
---Info
-	local _Player_Level = UnitLevel("player");
-	local _Player_Percent_Health = ConRO:PercentHealth('player');
-	local _is_PvP = ConRO:IsPvP();
-	local _in_combat = UnitAffectingCombat('player');
-	local _party_size = GetNumGroupMembers();
-
-	local _is_PC = UnitPlayerControlled("target");
-	local _is_Enemy = ConRO:TarHostile();
-	local _Target_Health = UnitHealth('target');
-	local _Target_Percent_Health = ConRO:PercentHealth('target');
-
---Resources
-	local _Mana, _Mana_Max, _Mana_Percent = ConRO:PlayerPower('Mana');
-	local _HolyPower, _HolyPower_Max = ConRO:PlayerPower('HolyPower');
+	wipe(ConRO.SuggestedDefSpells);
+	ConRO:Stats();
+	local Ability, Form, Buff, Debuff, PetAbility, PvPTalent = ids.Ret_Ability, ids.Ret_Form, ids.Ret_Buff, ids.Ret_Debuff, ids.Ret_PetAbility, ids.Ret_PvPTalent;
 
 --Abilities
 	local _BlessingofProtection, _BlessingofProtection_RDY = ConRO:AbilityReady(Ability.BlessingofProtection, timeShift);
@@ -854,11 +741,6 @@ function ConRO.Paladin.RetributionDef(_, timeShift, currentSpell, gcd, tChosen, 
 	local _WordofGlory, _WordofGlory_RDY = ConRO:AbilityReady(Ability.WordofGlory, timeShift);
 
 	local _JusticarsVengeance, _JusticarsVengeance_RDY = ConRO:AbilityReady(Ability.JusticarsVengeance, timeShift);
-
---Conditions
-	local _is_moving = ConRO:PlayerSpeed();
-	local _enemies_in_melee, _target_in_melee = ConRO:Targets("Melee");
-	local _target_in_10yrds = ConRO:CheckInteractDistance("target", 3);
 
 --Rotations
 		if _LayonHands_RDY and not _Forbearance_BUFF and _Player_Percent_Health <= 10 then
